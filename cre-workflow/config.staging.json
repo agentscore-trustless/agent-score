@@ -1,0 +1,5 @@
+{
+  "schedule": "*/30 * * * * *",
+  "contractAddress": "0xYourContractAddress",
+  "agentAddress": "0xYourAgentAddress"
+}
