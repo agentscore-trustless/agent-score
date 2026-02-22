@@ -1,3 +1,7 @@
+<div align="center">
+    <img src="images/agent_score_logo.jpg" alt="AgentScore Logo" width="300">
+</div>
+
 # 🛡️ AgentScore Protocol
 **Trustless AI Reputation Protocol via ERC-8004 & Chainlink CRE**
 
