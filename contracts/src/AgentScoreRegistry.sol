@@ -1,10 +1,7 @@
 // SPDX-License-Identifier: MIT
 pragma solidity ^0.8.20;
 
-import "@openzeppelin/contracts/token/ERC721/ERC721.sol";
-import {
-    ERC721URIStorage
-} from "@openzeppelin/contracts/token/ERC721/extensions/ERC721URIStorage.sol";
+import {ERC721} from "@openzeppelin/contracts/token/ERC721/ERC721.sol";
 import {AccessControl} from "@openzeppelin/contracts/access/AccessControl.sol";
 
 /**
@@ -13,7 +10,7 @@ import {AccessControl} from "@openzeppelin/contracts/access/AccessControl.sol";
  * @dev Implements AccessControl to ensure only the Chainlink CRE can submit assertions.
  *      Based on specifications for the AgentScore protocol.
  */
-contract AgentScoreRegistry is AccessControl, ERC721URIStorage {
+contract AgentScoreRegistry is AccessControl, ERC721 {
     /// @notice Role for the Chainlink Runtime Environment (CRE) orchestrator
     bytes32 public constant CRE_ROLE = keccak256("CRE_ROLE");
 
@@ -28,7 +25,7 @@ contract AgentScoreRegistry is AccessControl, ERC721URIStorage {
 
     /// @notice Struct to hold assertion data
     struct Assertion {
-        uint256 score;
+        int256 scoreDelta;
         bytes data;
         uint256 timestamp;
     }
@@ -38,6 +35,12 @@ contract AgentScoreRegistry is AccessControl, ERC721URIStorage {
 
     /// @notice Mapping from agent ID to their assertion history
     mapping(uint256 => Assertion[]) private _agentAssertions;
+
+    /// @notice Mapping from agent ID to their historical score points over time
+    mapping(uint256 => uint256[]) private _agentScoreHistory;
+
+    /// @notice Mapping from token ID to their metadata URI
+    mapping(uint256 => string) private _tokenURIs;
 
     /// @notice Mapping from agent address to their token ID
     mapping(address => uint256) public agentIds;
@@ -51,7 +54,7 @@ contract AgentScoreRegistry is AccessControl, ERC721URIStorage {
     /// @notice Event emitted when a new assertion is submitted
     event AssertionSubmitted(
         uint256 indexed tokenId,
-        uint256 score,
+        int256 scoreDelta,
         bytes data,
         uint256 timestamp
     );
@@ -110,9 +113,12 @@ contract AgentScoreRegistry is AccessControl, ERC721URIStorage {
         profile.assertionCount = 0;
         profile.isBlacklisted = false;
 
+        // Initialize history with the starting score
+        _agentScoreHistory[tokenId].push(50);
+
         registeredAgents.push(tokenId);
 
-        _safemint(msg.sender, tokenId);
+        _safeMint(msg.sender, tokenId);
         _setTokenURI(tokenId, metadataURI);
 
         emit AgentRegistered(tokenId, msg.sender, metadataURI);
@@ -187,34 +193,69 @@ contract AgentScoreRegistry is AccessControl, ERC721URIStorage {
 
     function supportsInterface(
         bytes4 interfaceId
-    ) public view override(AccessControl, ERC721URIStorage) returns (bool) {
+    ) public view override(AccessControl, ERC721) returns (bool) {
         return super.supportsInterface(interfaceId);
     }
 
     /**
-     * @notice Submits an assertion for an agent, updating their score.
-     * @dev Only callable by the CRE_ROLE.
+     * @notice Sets the metadata URI for a given token ID.
+     * @param tokenId The ID of the token.
+     * @param uri The URI string.
+     */
+    function _setTokenURI(uint256 tokenId, string memory uri) internal virtual {
+        _tokenURIs[tokenId] = uri;
+    }
+
+    /**
+     * @notice Returns the metadata URI for a given token ID.
+     * @param tokenId The ID of the token.
+     */
+    function tokenURI(
+        uint256 tokenId
+    ) public view virtual override returns (string memory) {
+        _requireOwned(tokenId);
+        return _tokenURIs[tokenId];
+    }
+
+    /**
+     * @notice Submits an assertion for an agent, updating their score by a delta.
+     * @dev Only callable by the CRE_ROLE. Score delta can be positive or negative.
      * @param tokenId The ID of the agent.
-     * @param score The new reputation score.
+     * @param scoreDelta The change to apply to the reputation score.
      * @param data Additional data or proof associated with the assertion.
      */
     function submitAssertion(
         uint256 tokenId,
-        uint256 score,
+        int256 scoreDelta,
         bytes calldata data
     ) external onlyRole(CRE_ROLE) {
         AgentProfile storage profile = agentProfiles[tokenId];
         if (profile.isBlacklisted) revert AgentIsBlacklisted();
 
-        profile.score = score;
+        // Apply delta and clamp between 0 and 100
+        int256 newScore = int256(profile.score) + scoreDelta;
+        if (newScore > 100) {
+            profile.score = 100;
+        } else if (newScore < 0) {
+            profile.score = 0;
+        } else {
+            profile.score = uint256(newScore);
+        }
+
         profile.lastUpdated = block.timestamp;
         profile.assertionCount++;
 
         _agentAssertions[tokenId].push(
-            Assertion({score: score, data: data, timestamp: block.timestamp})
+            Assertion({
+                scoreDelta: scoreDelta,
+                data: data,
+                timestamp: block.timestamp
+            })
         );
+        // Push the new score into the history log
+        _agentScoreHistory[tokenId].push(profile.score);
 
-        emit AssertionSubmitted(tokenId, score, data, block.timestamp);
+        emit AssertionSubmitted(tokenId, scoreDelta, data, block.timestamp);
     }
 
     /**
@@ -226,5 +267,32 @@ contract AgentScoreRegistry is AccessControl, ERC721URIStorage {
         uint256 tokenId
     ) external view returns (Assertion[] memory) {
         return _agentAssertions[tokenId];
+    }
+
+    /**
+     * @notice Returns the score history for a specific agent.
+     * @param tokenId The ID of the agent.
+     * @param limit The maximum number of recent scores to return. Use 0 to return all.
+     * @return An array of historical scores.
+     */
+    function getScoreHistory(
+        uint256 tokenId,
+        uint256 limit
+    ) external view returns (uint256[] memory) {
+        uint256[] storage fullHistory = _agentScoreHistory[tokenId];
+        uint256 total = fullHistory.length;
+
+        if (limit == 0 || limit >= total) {
+            return fullHistory;
+        }
+
+        uint256[] memory recentHistory = new uint256[](limit);
+        uint256 startIndex = total - limit;
+
+        for (uint256 i = 0; i < limit; i++) {
+            recentHistory[i] = fullHistory[startIndex + i];
+        }
+
+        return recentHistory;
     }
 }

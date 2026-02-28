@@ -1,66 +1,38 @@
-## Foundry
+# AgentScoreRegistry Smart Contract 📜
 
-**Foundry is a blazing fast, portable and modular toolkit for Ethereum application development written in Rust.**
+This directory contains the Foundry project for the `AgentScoreRegistry.sol` smart contract, which is the foundational pillar of the AgentScore Protocol. It acts as an on-chain identity and reputation ledger for Autonomous AI Agents.
 
-Foundry consists of:
+## 🏗️ Architecture
+The `AgentScoreRegistry` is an implementation of the **ERC-8004 Draft Standard** simplified for the hackathon and extended with additional features, leveraging the robust **ERC-721** NFT standard provided by OpenZeppelin to represent an Agent's permanent on-chain Identity.
 
-- **Forge**: Ethereum testing framework (like Truffle, Hardhat and DappTools).
-- **Cast**: Swiss army knife for interacting with EVM smart contracts, sending transactions and getting chain data.
-- **Anvil**: Local Ethereum node, akin to Ganache, Hardhat Network.
-- **Chisel**: Fast, utilitarian, and verbose solidity REPL.
+*   **Identities (NFTs):** Agents mint a Soulbound `TokenId` mapping their address to their metadata URI.
+*   **Reputation Clamping:** The core score is securely clamped between `[0, 100]`.
+*   **Immutable Historical Logs:** Every score delta update is permanently appended to the `_agentScoreHistory` map, allowing frontend indexers to graph the agent's historical reliability deterministically.
+*   **Access Control:** The contract utilizes OpenZeppelin `AccessControl`. The critical `submitAssertion` function is locked behind the `CRE_ROLE`, ensuring that **only** the Chainlink CRE oracle can append audits to the ledger.
 
-## Documentation
+## 🔗 Chainlink Convergence Hackathon Note
+This registry relies on **Chainlink CRE (Custom Runtime Environment)** to function trustlessly. Because the M2M AI responses live off-chain, the Registry relies on the CRE Workflow to deterministically validate the SLA of the AI's output and call the `submitAssertion(uint256 tokenId, int256 scoreDelta, bytes calldata data)` endpoint acting as a decentralized oracle.
 
-https://book.getfoundry.sh/
+Without Chainlink CRE bridging the gap between off-chain AI execution and on-chain ERC-8004 storage, verifiable AI reputation would be impossible.
 
-## Usage
+## 🛠️ Local Development & Testing
 
-### Build
+This project uses [Foundry](https://getfoundry.sh/) for testing and deployment.
 
-```shell
-$ forge build
+### 1. Install Dependencies
+```bash
+forge install
 ```
 
-### Test
-
-```shell
-$ forge test
+### 2. Run the Test Suite
+We've built a comprehensive test suite to verify the score clamping, access control limits, and historical array logic.
+```bash
+forge test
 ```
 
-### Format
-
-```shell
-$ forge fmt
-```
-
-### Gas Snapshots
-
-```shell
-$ forge snapshot
-```
-
-### Anvil
-
-```shell
-$ anvil
-```
-
-### Deploy
-
-```shell
-$ forge script script/Counter.s.sol:CounterScript --rpc-url <your_rpc_url> --private-key <your_private_key>
-```
-
-### Cast
-
-```shell
-$ cast <subcommand>
-```
-
-### Help
-
-```shell
-$ forge --help
-$ anvil --help
-$ cast --help
+### 3. Deploy to Base (Tenderly Virtual Testnet)
+During the hackathon, we deployed to Base Sepolia/Tenderly.
+```bash
+forge build
+forge script script/Deploy.s.sol:DeployScript --rpc-url $TENDERLY_VIRTUAL_TESTNET_RPC --broadcast
 ```

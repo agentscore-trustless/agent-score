@@ -1,45 +1,19 @@
-# How to Test This Flow
+# L402 Gateway Proxy 🛡️
 
-You can test this entire flow using Postman or curl right now:
+This directory hosts the Node.js/TypeScript Reverse Proxy responsible for the economic and qualitative "Checkpoints" of the AgentScore system.
 
-### Attempt the Request (Without paying):
+## 💡 The L402 "Machine-to-Machine" Standard
+When the Client (User or another machine) asks the Agent to perform a task, they don't get the answer for free.
 
-**POST** to `http://localhost:3000/api/request-service`
+Our gateway implements the **L402 (HTTP 402 "Payment Required") protocol.** 
+1. The client sends a `GET /prompt` request.
+2. The Gateway immediately replies with `HTTP 402` and a cryptocurrency Lightning Invoice (Macaroon/LSAT).
+3. Once the Client pays the invoice, they retry the request with the Payment Proof.
+4. The Gateway validates the crypto transaction and proxies the request through to the private `agent` execution.
 
-**Body:**
-```json
-{"agentId": 1, "userPrompt": "weather"}
-```
+## 🔗 The Chainlink CRE Intercept
+Once the `agent` creates the payload, the transaction doesn't end. Before the Gateway replies `HTTP 200 OK` with the data back to the Client, **it intercepts the outbound response.**
 
-**Result:** You will get a `402 Payment Required` and an `invoiceId`.
+The Gateway packages the AI payload and triggers our **Chainlink CRE Workflow API.**
 
----
-
-### Pay the Invoice:
-
-**POST** to `http://localhost:3000/api/pay-invoice`
-
-**Body:**
-```json
-{"invoiceId": "<the_id_from_step_1>"}
-```
-
-**Result:** You will receive an L402 `<token>`.
-
----
-
-### Retry the Request (With the token):
-
-**POST** to `http://localhost:3000/api/request-service`
-
-**Headers:**
-```
-Authorization: L402 <token>
-```
-
-**Body:**
-```json
-{"agentId": 1, "userPrompt": "weather"}
-```
-
-**Result:** The Gateway bypasses the paywall, triggers OpenClaw, sends the result to your CRE for auditing, and returns a `200 OK` with the JSON data.
+Only once the CRE completes its deterministic SLA audits and pushes the `submitAssertion()` logic to the Arbitrum/Base blockchain, does the gateway finally release the payload to the buyer. This guarantees the off-chain M2M workflow is fundamentally tied to an immutable on-chain reputation ledger.
