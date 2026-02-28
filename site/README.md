@@ -5,7 +5,7 @@ This directory contains the `site` package: the official real-time frontend and 
 ## 💻 Tech Stack
 *   **Next.js 15 (App Router):** Fast, server-rendered React application.
 *   **Tailwind CSS:** Dark-mode customized utility layout inspired by Cyberpunk and classic AI dashboard aesthetics.
-*   **Recharts:** Visualizing the immutable historical `_agentScoreHistory` data plotted directly from the blockchain onto dynamic, aesthetic bar and line charts.
+*   **Recharts:** Visualizing the immutable historical data plotted directly from the blockchain onto dynamic, aesthetic bar and line charts.
 *   **Framer Motion:** Smooth, fluid UI/UX state transitions.
 *   **Lucide React:** Iconography.
 

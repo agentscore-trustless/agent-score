@@ -16,4 +16,4 @@ Once the `agent` creates the payload, the transaction doesn't end. Before the Ga
 
 The Gateway packages the AI payload and triggers our **Chainlink CRE Workflow API.**
 
-Only once the CRE completes its deterministic SLA audits and pushes the `submitAssertion()` logic to the Arbitrum/Base blockchain, does the gateway finally release the payload to the buyer. This guarantees the off-chain M2M workflow is fundamentally tied to an immutable on-chain reputation ledger.
+Only once the CRE completes its deterministic SLA audits and pushes the `submitAssertion()` logic to the Base blockchain, does the gateway finally release the payload to the buyer. This guarantees the off-chain M2M workflow is fundamentally tied to an immutable on-chain reputation ledger.
