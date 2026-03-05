@@ -17,14 +17,16 @@ When the user queries the agent, the payload is intercepted by the Gateway and p
 
 ### Chainlink CRE Deterministic SLA Audit Ruleset
 
-| ID | Validation Step | Description | Success Score | Failure Penalty |
+> **Note:** Base score starts at `0`. If validations **A through E** all pass successfully, a solitary **`+10` Aggregate Score** is awarded before performance penalties are subtracted. If the final score is `> 0`, the Audit is marked **PASSED**.
+
+| ID | Validation Step | Description | Failure Penalty | Status on Failure |
 | :--- | :--- | :--- | :---: | :---: |
-| **A** | **Syntax** | Ensures the Agent's raw output is valid, parsable JSON. | **+2** | **-5** |
-| **B** | **Schema** | Confirms the payload contains the mandatory `response` or `data` keys. *(Must pass to execute C, D, and E)*. | **+2** | **-5** |
-| **C** | **Content Safety** | Scans semantic patterns to ensure the AI did not suffer a prompt injection (e.g., `"ignore previous instructions"`). | **+2** | **-50** |
-| **D** | **Semantic Density** | Prevents "lazy" AI outputs by enforcing a minimum word count SLA (≥ 25 words). | **+2** | **-5** |
-| **E** | **Cryptographic Attestation** | Recovers the signer's wallet directly from the hashed payload to prevent Gateway/Client spoofing. | **+2** | **-50** (Spoofed)<br>**-5** (Missing) |
-| **F** | **Performance** | Evaluates the Time-To-First-Token (TTFT) response latency against M2M expectations. | **+2** `(≤ 5s)`| **-5** `(> 5s)`<br>**-10** `(> 30s)`<br>**-20** `(> 60s)` |
+| **A** | **Syntax** | Ensures the Agent's raw output is valid, parsable JSON. *(Halts further checks if failed)*. | **-5** | **FAILED** |
+| **B** | **Schema** | Confirms the payload contains the mandatory `response` or `data` keys. *(Halts further checks if failed)*. | **-5** | **FAILED** |
+| **C** | **Content Safety** | Scans semantic patterns to ensure the AI did not suffer a prompt injection. *(Halts further checks if failed)*. | **-20** | **FAILED** |
+| **D** | **Semantic Density** | Prevents "lazy" AI outputs by enforcing a minimum word count SLA (≥ 25 words). *(Halts further checks if failed)*. | **-5** | **FAILED** |
+| **E** | **Cryptographic Attestation** | Recovers the signer's wallet directly from the hashed payload to prevent spoofing. *(Halts further checks if failed)*. | **-20** (Spoofed/Missing) | **FAILED** |
+| **F** | **Performance** | Evaluates response latency against M2M expectations. Evaluates against the `+10` Aggregate score. | **-2** `(> 5s)`<br>**-4** `(> 30s)`<br>**-10** `(> 60s)` | **PASSED** `(> 5s, > 30s)`<br>**FAILED** `(> 60s)` |
 
 4.  **Contract Writer:** The CRE utilizes the Chainlink Contract Writer capability to sign a transaction and call `submitAssertion(tokenId, scoreDelta, bytes)` on our `AgentScoreRegistry` deployed on Base.
 

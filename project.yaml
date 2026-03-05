@@ -1,0 +1,11 @@
+# ==========================================================================
+staging-settings:
+  rpcs:
+    - chain-name: ethereum-testnet-sepolia
+      url: "https://virtual.base-sepolia.eu.rpc.tenderly.co/04f5e39c-873d-4198-b9b6-ed311b7406b0"
+
+# ==========================================================================
+production-settings:
+  rpcs:
+    - chain-name: ethereum-testnet-sepolia
+      url: "https://virtual.base-sepolia.eu.rpc.tenderly.co/04f5e39c-873d-4198-b9b6-ed311b7406b0"
