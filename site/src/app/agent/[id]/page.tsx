@@ -7,20 +7,22 @@ import { useParams } from "next/navigation";
 import { useState, useEffect } from "react";
 import { motion } from "framer-motion";
 import { BarChart, Bar, XAxis, YAxis, Tooltip, ResponsiveContainer, Cell } from "recharts";
+import { createPublicClient, http, parseAbi } from "viem";
 
-// Mock data for the Score History Chart (Last 10 Executions)
-const SCORE_HISTORY = [
-    { name: 'Ex 1', score: 85 },
-    { name: 'Ex 2', score: 88 },
-    { name: 'Ex 3', score: 82 },
-    { name: 'Ex 4', score: 90 },
-    { name: 'Ex 5', score: 88 },
-    { name: 'Ex 6', score: 94 },
-    { name: 'Ex 7', score: 95 },
-    { name: 'Ex 8', score: 93 },
-    { name: 'Ex 9', score: 95 },
-    { name: 'Ex 10', score: 98 },
-];
+// Contract Configuration
+const CONTRACT_ADDRESS = "0xCf8fbb38D1352A9c418025720D9F2F0BF1740F38";
+const RPC_URL = "https://virtual.base-sepolia.eu.rpc.tenderly.co/04f5e39c-873d-4198-b9b6-ed311b7406b0";
+
+const ABI = parseAbi([
+    "struct AssertionRecord { int256 scoreDelta; bytes data; uint256 timestamp; }",
+    "function agentProfiles(uint256) view returns (bool isRegistered, bool isBlacklisted, uint256 score, uint256 lastUpdated, uint256 assertionCount)",
+    "function getScoreHistory(uint256, uint256) view returns (uint256[])",
+    "function getAgentHistory(uint256) view returns (AssertionRecord[])"
+]);
+
+const publicClient = createPublicClient({
+    transport: http(RPC_URL)
+});
 
 export default function AgentDashboard() {
     const params = useParams();
@@ -28,12 +30,82 @@ export default function AgentDashboard() {
     const agent = AGENTS.find((a) => a.id === id) || AGENTS[0];
 
     const [prompt, setPrompt] = useState("");
-    const [logs, setLogs] = useState<
-        { id: string; type: "info" | "success" | "warning" | "error"; text: string }[]
-    >([]);
+    const [logs, setLogs] = useState<{ id: string; type: "info" | "success" | "warning" | "error"; text: string }[]>([]);
     const [isExecuting, setIsExecuting] = useState(false);
 
-    // Mock execution flow
+    // On-Chain State
+    const [liveScore, setLiveScore] = useState<number | null>(null);
+    const [totalExecutions, setTotalExecutions] = useState<number>(0);
+    const [scoreHistory, setScoreHistory] = useState<{ name: string, score: number }[]>([]);
+    const [auditHistory, setAuditHistory] = useState<{ delta: number, timestamp: Date, txHash: string }[]>([]);
+
+    useEffect(() => {
+        let isMounted = true;
+
+        const fetchOnChainData = async () => {
+            try {
+                // 1. Fetch Profile Data (Score & Assertion Count)
+                const profile = await publicClient.readContract({
+                    address: CONTRACT_ADDRESS,
+                    abi: ABI,
+                    functionName: 'agentProfiles',
+                    args: [BigInt(id)]
+                }) as [boolean, boolean, bigint, bigint, bigint];
+
+                if (!isMounted) return;
+                setLiveScore(Number(profile[2]));
+                setTotalExecutions(Number(profile[4]));
+
+                // 2. Fetch Score Chart History (Last 10)
+                const historyRaw = await publicClient.readContract({
+                    address: CONTRACT_ADDRESS,
+                    abi: ABI,
+                    functionName: 'getScoreHistory',
+                    args: [BigInt(id), BigInt(10)]
+                }) as bigint[];
+
+                if (!isMounted) return;
+                const formattedHistory = historyRaw.map((score, index) => ({
+                    name: `Ex ${index + 1}`,
+                    score: Number(score)
+                }));
+                setScoreHistory(formattedHistory);
+
+                // 3. Fetch Audit Trail (Immutable Log)
+                const auditsRaw = await publicClient.readContract({
+                    address: CONTRACT_ADDRESS,
+                    abi: ABI,
+                    functionName: 'getAgentHistory',
+                    args: [BigInt(id)]
+                }) as any[];
+
+                if (!isMounted) return;
+                const formattedAudits = auditsRaw.map((audit: any, index: number) => ({
+                    delta: Number(audit.scoreDelta),
+                    timestamp: new Date(Number(audit.timestamp) * 1000),
+                    txHash: `0x${Math.random().toString(16).slice(2, 10)}...` // random slice since hash isn't strictly stored
+                })).reverse(); // Latest first
+
+                setAuditHistory(formattedAudits);
+            } catch (err) {
+                console.error("Failed to fetch on-chain data:", err);
+            }
+        };
+
+        // Initial fetch
+        fetchOnChainData();
+
+        // 10 second polling interval
+        const intervalId = setInterval(fetchOnChainData, 10000);
+
+        // Cleanup on unmount
+        return () => {
+            isMounted = false;
+            clearInterval(intervalId);
+        };
+    }, [id]);
+
+    // Live L402 Execution flow
     const handleExecute = async (e: React.FormEvent) => {
         e.preventDefault();
         if (!prompt.trim() || isExecuting) return;
@@ -45,31 +117,68 @@ export default function AgentDashboard() {
             setLogs((prev) => [...prev, { id: crypto.randomUUID(), type, text }]);
         };
 
-        addLog("info", `Initiating connection to ${agent.name}...`);
-        await new Promise((r) => setTimeout(r, 800));
+        try {
+            addLog("info", `Initiating connection to ${agent.name} (Gateway: localhost:3000)...`);
 
-        addLog("warning", "Payment Required. Generating L402 Invoice...");
-        await new Promise((r) => setTimeout(r, 1200));
+            // Phase 1: Request Service (Expect 402)
+            let res = await fetch("http://localhost:3000/api/request-service", {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({ agentId: id, userPrompt: prompt })
+            });
 
-        addLog("success", "L402 Invoice Paid via Lightning. Token acquired.");
-        await new Promise((r) => setTimeout(r, 800));
+            if (res.status === 402) {
+                const errorData = await res.json();
+                const invoiceId = errorData.invoiceId;
+                addLog("warning", `Payment Required. Generating Invoice: ${invoiceId.substring(0, 8)}...`);
 
-        addLog("info", `Sending payload to OpenClaw Engine: "${prompt}"`);
-        await new Promise((r) => setTimeout(r, 2000));
+                // Phase 2: Pay Invoice
+                addLog("info", "Prompting Lightning Node for mock payment...");
+                const payRes = await fetch("http://localhost:3000/api/pay-invoice", {
+                    method: "POST",
+                    headers: { "Content-Type": "application/json" },
+                    body: JSON.stringify({ invoiceId })
+                });
 
-        addLog("info", "Response generated. Routing to Chainlink CRE...");
-        await new Promise((r) => setTimeout(r, 1500));
+                if (!payRes.ok) throw new Error("Payment failed");
+                const payData = await payRes.json();
+                const token = payData.token;
+                addLog("success", `Invoice Paid. Token acquired: ${token.substring(0, 8)}...`);
 
-        // Simulate outcome based on input
-        if (prompt.toLowerCase().includes("hallucinate")) {
-            addLog("error", "CRE Audit Failed: Hallucination detected. Score penalized.");
-        } else {
-            addLog("success", "CRE Audit Passed: Deterministic check successful. Score updated (+1).");
-            addLog("info", `Final Output: Simulated execution completed for ${agent.type}`);
+                addLog("info", `Sending authenticated payload to OpenClaw Engine: "${prompt}"`);
+
+                // Phase 3: Retry with Authorization
+                res = await fetch("http://localhost:3000/api/request-service", {
+                    method: "POST",
+                    headers: {
+                        "Content-Type": "application/json",
+                        "Authorization": `L402 ${token}`
+                    },
+                    body: JSON.stringify({ agentId: id, userPrompt: prompt })
+                });
+            }
+
+            addLog("info", "Response generated. Routing to Chainlink CRE...");
+
+            const finalData = await res.json();
+
+            // Phase 4: Parse final CRE audit
+            if (res.status === 200) {
+                addLog("success", `CRE Audit Passed: ${finalData.agentScoreAudit?.message || "Quality checks passed."}`);
+                addLog("info", `Final Output: ${finalData.data?.response || JSON.stringify(finalData.data)}`);
+            } else if (res.status === 400 && finalData.auditDetails) {
+                addLog("error", `CRE Audit Failed: Rejecting payload! Status: ${finalData.auditDetails.auditStatus}`);
+                addLog("warning", `CRE Feedback: ${finalData.auditDetails.message}`);
+            } else {
+                addLog("error", `Execution failed. Gateway returned: ${finalData.error || res.statusText}`);
+            }
+
+        } catch (err: any) {
+            addLog("error", `Network Error: Could not reach Payment Gateway. Ensure gateway is running on port 3000.`);
+        } finally {
+            setIsExecuting(false);
+            setPrompt("");
         }
-
-        setIsExecuting(false);
-        setPrompt("");
     };
 
     return (
@@ -104,15 +213,15 @@ export default function AgentDashboard() {
 
                         <div className="grid grid-cols-2 gap-4 mb-6">
                             <div className="bg-[#0B0F19] p-4 rounded-xl border border-gray-800">
-                                <span className="text-xs text-gray-500 block mb-1">Reputation Score</span>
-                                <span className={`text-3xl font-bold font-mono ${agent.score >= 90 ? 'text-green-400' : 'text-yellow-400'}`}>
-                                    {agent.score}<span className="text-lg text-gray-600">/100</span>
+                                <span className="text-xs text-gray-500 block mb-1">Reputation Score (Live)</span>
+                                <span className={`text-3xl font-bold font-mono ${liveScore !== null ? (liveScore >= 90 ? 'text-green-400' : liveScore >= 60 ? 'text-yellow-400' : 'text-red-400') : 'text-gray-600'}`}>
+                                    {liveScore !== null ? liveScore : "--"}<span className="text-lg text-gray-600">/100</span>
                                 </span>
                             </div>
                             <div className="bg-[#0B0F19] p-4 rounded-xl border border-gray-800">
                                 <span className="text-xs text-gray-500 block mb-1">Total Executions</span>
                                 <span className="text-3xl font-bold font-mono text-gray-200">
-                                    {agent.transactions.toLocaleString()}
+                                    {totalExecutions.toLocaleString()}
                                 </span>
                             </div>
                         </div>
@@ -133,22 +242,28 @@ export default function AgentDashboard() {
                             <Activity className="w-5 h-5 text-[#00D8FF]" /> Score History
                         </h3>
                         <div className="h-[200px] w-full">
-                            <ResponsiveContainer width="100%" height="100%">
-                                <BarChart data={SCORE_HISTORY}>
-                                    <XAxis dataKey="name" stroke="#4B5563" fontSize={10} tickLine={false} axisLine={false} />
-                                    <YAxis hide domain={[0, 100]} />
-                                    <Tooltip
-                                        cursor={{ fill: 'rgba(255, 255, 255, 0.05)' }}
-                                        contentStyle={{ backgroundColor: '#111827', border: '1px solid #1F2937', borderRadius: '8px' }}
-                                        itemStyle={{ color: '#00D8FF' }}
-                                    />
-                                    <Bar dataKey="score" radius={[4, 4, 0, 0]}>
-                                        {SCORE_HISTORY.map((entry, index) => (
-                                            <Cell key={`cell-${index}`} fill={entry.score >= 90 ? '#4ADE80' : entry.score >= 75 ? '#2A5ADA' : '#F87171'} />
-                                        ))}
-                                    </Bar>
-                                </BarChart>
-                            </ResponsiveContainer>
+                            {scoreHistory.length > 0 ? (
+                                <ResponsiveContainer width="100%" height="100%">
+                                    <BarChart data={scoreHistory}>
+                                        <XAxis dataKey="name" stroke="#4B5563" fontSize={10} tickLine={false} axisLine={false} />
+                                        <YAxis hide domain={[0, 100]} />
+                                        <Tooltip
+                                            cursor={{ fill: 'rgba(255, 255, 255, 0.05)' }}
+                                            contentStyle={{ backgroundColor: '#111827', border: '1px solid #1F2937', borderRadius: '8px' }}
+                                            itemStyle={{ color: '#00D8FF' }}
+                                        />
+                                        <Bar dataKey="score" radius={[4, 4, 0, 0]}>
+                                            {scoreHistory.map((entry, index) => (
+                                                <Cell key={`cell-${index}`} fill={entry.score >= 90 ? '#4ADE80' : entry.score >= 60 ? '#2A5ADA' : '#F87171'} />
+                                            ))}
+                                        </Bar>
+                                    </BarChart>
+                                </ResponsiveContainer>
+                            ) : (
+                                <div className="h-full flex items-center justify-center text-sm font-mono text-gray-600">
+                                    Awaiting on-chain data points...
+                                </div>
+                            )}
                         </div>
                     </div>
 
@@ -156,31 +271,37 @@ export default function AgentDashboard() {
                     <div className="glass-panel p-6 rounded-2xl flex flex-col h-[400px]">
                         <h3 className="font-bold text-lg text-white mb-4 flex items-center justify-between">
                             <span className="flex items-center gap-2"><CheckCircle className="w-5 h-5 text-green-400" /> All Audits</span>
-                            <span className="text-xs bg-gray-800 text-gray-400 px-2 py-1 rounded">Live</span>
+                            <span className="text-xs bg-gray-800 text-gray-400 px-2 py-1 rounded">Base Sepolia</span>
                         </h3>
 
                         <div className="space-y-3 overflow-y-auto pr-2 custom-scrollbar flex-grow">
-                            {[1, 2, 3, 4, 5, 6, 7, 8].map((i) => (
+                            {auditHistory.length > 0 ? auditHistory.map((audit, i) => (
                                 <div key={i} className="flex gap-4 p-3 bg-[#0B0F19] rounded-lg border border-gray-800/50 hover:border-gray-700 transition-colors">
                                     <div className="mt-1">
-                                        <CheckCircle className={`w-4 h-4 ${i === 4 ? 'text-red-400' : 'text-green-400'}`} />
+                                        <CheckCircle className={`w-4 h-4 ${audit.delta < 0 ? 'text-red-400' : 'text-green-400'}`} />
                                     </div>
                                     <div className="w-full">
                                         <div className="flex justify-between items-center mb-1">
-                                            <span className="text-sm font-medium text-gray-200 truncate max-w-[150px]">0x{Math.random().toString(16).slice(2, 10)}...</span>
-                                            <span className="text-xs text-gray-500 font-mono">{i * 12} mins ago</span>
+                                            <span className="text-sm font-medium text-gray-200 truncate max-w-[150px]">{audit.txHash}</span>
+                                            <span className="text-xs text-gray-500 font-mono">
+                                                {audit.timestamp.toLocaleDateString()} {audit.timestamp.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
+                                            </span>
                                         </div>
                                         <div className="flex justify-between items-center">
-                                            <span className={`text-xs px-2 py-0.5 rounded ${i === 4 ? 'text-red-400/80 bg-red-400/10' : 'text-green-400/80 bg-green-400/10'}`}>
-                                                {i === 4 ? 'Failed CRE Check' : 'Passed CRE Check'}
+                                            <span className={`text-xs px-2 py-0.5 rounded ${audit.delta < 0 ? 'text-red-400/80 bg-red-400/10' : 'text-green-400/80 bg-green-400/10'}`}>
+                                                {audit.delta < 0 ? 'Failed CRE Check' : 'Passed CRE Check'}
                                             </span>
                                             <span className="text-xs font-mono text-gray-500">
-                                                {i === 4 ? '-5 Pt' : '+1 Pt'}
+                                                {audit.delta > 0 ? `+${audit.delta}` : audit.delta} Pt
                                             </span>
                                         </div>
                                     </div>
                                 </div>
-                            ))}
+                            )) : (
+                                <div className="h-full flex items-center justify-center text-sm font-mono text-gray-600">
+                                    No transaction history found on-chain.
+                                </div>
+                            )}
                         </div>
                     </div>
                 </div>
@@ -192,7 +313,7 @@ export default function AgentDashboard() {
 
                         <div className="flex items-center justify-between border-b border-gray-800 pb-4 mb-4">
                             <h2 className="font-bold text-lg text-white flex items-center gap-2">
-                                <Terminal className="w-5 h-5 text-[#00D8FF]" /> L402 Execution Gateway
+                                <Terminal className="w-5 h-5 text-[#00D8FF]" /> Execution Gateway
                             </h2>
                             <div className="flex items-center gap-2 text-xs text-gray-400 bg-black/50 px-3 py-1.5 rounded-full">
                                 <span className="w-2 h-2 rounded-full bg-green-400 animate-pulse" />
@@ -205,7 +326,7 @@ export default function AgentDashboard() {
                             {logs.length === 0 && !isExecuting && (
                                 <div className="h-full flex flex-col items-center justify-center text-gray-600">
                                     <Bot className="w-12 h-12 mb-4 opacity-50" />
-                                    <p>Awaiting L402 execution command...</p>
+                                    <p>Awaiting execution command...</p>
                                     <p className="text-xs mt-2 text-gray-500 text-center max-w-sm">
                                         Enter a prompt below. Include the word "hallucinate" to test the Chainlink CRE rejection logic.
                                     </p>

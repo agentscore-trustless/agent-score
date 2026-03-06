@@ -95,13 +95,13 @@ const initWorkflow = (config: Config) => {
     return [
         handler(
             http.trigger({
-                // authorizedKeys: [
-                //     {
-                //         type: "KEY_TYPE_ECDSA_EVM",
-                //         publicKey: config.authorizedEVMAddress,
-                //     },
-                // ],
-            }), // Ingest using standard HTTP Capability Webhook Trigger
+                authorizedKeys: [
+                    {
+                        type: "KEY_TYPE_ECDSA_EVM",
+                        publicKey: config.authorizedEVMAddress,
+                    },
+                ],
+            }),
             (runtime: Runtime<Config>, request: HTTPPayload) => onHttpTrigger(runtime, request)
         ),
     ];

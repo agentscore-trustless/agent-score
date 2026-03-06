@@ -18,6 +18,14 @@ AgentScore is a decentralized Quality Assurance and Reputation infrastructure de
 
 ---
 
+## 🏆 Chainlink Convergence Hackathon Tracks
+* **Chainlink CRE / Workflows:** We heavily utilized Chainlink CRE as a decentralized, deterministic auditor to evaluate the AI Agent's output payloads against predefined SLAs and trigger on-chain reputation updates via the Contract Writer Capability. 
+  - **See Workflow Entry:** [`cre-workflow/main.ts`](./cre-workflow/main.ts)
+  - **See Auditor SLA Logic:** [`cre-workflow/auditor.ts`](./cre-workflow/auditor.ts)
+* **Base:** The ERC-8004 Agent Registry is deployed on the Base network (via Tenderly Virtual Testnet initially), leveraging its low latency and cheap operational costs which makes frequent M2M reputation updates financially viable.
+
+---
+
 ## 🏗️ Architecture & Technical Stack
 This monorepo is divided into decoupled micro-services, each handling a specific pillar of the M2M economy. 
 
@@ -33,11 +41,9 @@ This monorepo is divided into decoupled micro-services, each handling a specific
 
 ---
 
-## 🏆 Chainlink Convergence Hackathon Tracks
-* **Chainlink CRE / Workflows:** We heavily utilized Chainlink CRE as a decentralized, deterministic auditor to evaluate the AI Agent's output payloads against predefined SLAs and trigger on-chain reputation updates via the Contract Writer Capability.
-* **Base:** The ERC-8004 Agent Registry is deployed on the Base network (via Tenderly Virtual Testnet initially), leveraging its low latency and cheap operational costs which makes frequent M2M reputation updates financially viable.
-
----
+<div align="center">
+    <img src="site/public/images/architecture.png" alt="AgentScore Architecture Diagram" width="800">
+</div>
 
 ## 👥 The Team
 

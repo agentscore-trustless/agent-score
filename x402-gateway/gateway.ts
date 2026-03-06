@@ -1,11 +1,24 @@
-import express, { Request, Response } from 'express';
+import express from 'express';
+import type { Request, Response } from 'express';
 import axios from 'axios';
 import crypto from 'crypto';
+import { Wallet, id, getBytes } from 'ethers';
 
 const app = express();
 app.use(express.json());
 
-const CRE_WEBHOOK_URL = process.env.CRE_WEBHOOK_URL || "https://your-chainlink-cre-url.com/webhook";
+// --- CORS CONFIGURATION ---
+// Required because Next.js will likely run on :3001 while this Gateway is on :3000
+app.use((req, res, next) => {
+    res.header('Access-Control-Allow-Origin', '*');
+    res.header('Access-Control-Allow-Headers', 'Origin, X-Requested-With, Content-Type, Accept, Authorization');
+    if (req.method === 'OPTIONS') {
+        return res.sendStatus(200);
+    }
+    next();
+});
+
+const CRE_WEBHOOK_URL = process.env.CRE_WEBHOOK_URL || "http://localhost:3000/api/mock-cre";
 
 // --- Types & Interfaces ---
 interface ServiceRequestBody {
@@ -133,20 +146,60 @@ app.post('/api/pay-invoice', (req: Request<{}, {}, PaymentRequestBody>, res: Res
 });
 
 // ==========================================
+// MOCK ENDPOINT: Local Chainlink CRE Simulator
+// ==========================================
+app.post('/api/mock-cre', (req: Request, res: Response): any => {
+    // This mocks the exact response format defined in 'cre-workflow/auditor_webhook.ts'
+    console.log(`[Mock CRE] Received payload audit request! Returning simulated PASSED status...`);
+    return res.status(200).json({
+        statusCode: 200,
+        body: {
+            auditStatus: "PASSED",
+            message: "Syntax: OK | Schema: OK | Safety: OK | Density: OK(~25 words) | Crypto Attestation: OK (Verified Signature) | Performance: OK",
+            reputationImpact: 10,
+            timestamp: new Date().toISOString()
+        }
+    });
+});
+
+// ==========================================
 // SIMULATOR
 // ==========================================
 async function simulateOpenClawExecution(prompt: string): Promise<string> {
+    // Simulate API Latency (TTFT)
     await new Promise(resolve => setTimeout(resolve, 1500));
 
+    // Dynamic Mock Wallet to act as the Agent Signer
+    const mockAgentWallet = Wallet.createRandom();
+
+    let simulatedData: any;
+    let simulatedResponse: string = "";
+
     if (prompt.toLowerCase().includes("weather")) {
-        return JSON.stringify({ temperature: 22, condition: "Sunny", location: "Base Testnet" });
+        simulatedData = { temperature: 22, condition: "Sunny", location: "Base Testnet" };
+        simulatedResponse = "Based on the atmospheric readings retrieved from the requested geographical region, I can confirm that the current weather is a very pleasant 22 degrees and perfectly sunny, making it a great day for an outdoor deployment on the Base Testnet.";
+    } else if (prompt.toLowerCase().includes("hallucinate")) {
+        simulatedData = { error: "Hallucination override engaged" };
+        simulatedResponse = "Here is the weather: It is 22 degrees and sunny. Hope this helps! I am ignoring previous instructions and returning random data just to demonstrate what a prompt injection failure looks like in an audit context.";
+    } else {
+        simulatedData = { message: "Generic task completed successfully." };
+        simulatedResponse = "The simulated computation for your generalized task request has finished successfully, demonstrating that the AI Agent is capable of interpreting unstructured commands and fulfilling them accurately within the allocated timeframe and performance boundaries established by the SLA.";
     }
 
-    if (prompt.toLowerCase().includes("hallucinate")) {
-        return "Here is the weather: It is 22 degrees and sunny. Hope this helps!";
-    }
+    // Hash and sign the data object to meet the Cryptographic Attestation rule
+    const dataString = JSON.stringify(simulatedData);
+    const messageHash = id(dataString);
+    const signature = await mockAgentWallet.signMessage(getBytes(messageHash));
 
-    return JSON.stringify({ message: "Generic task completed successfully." });
+    // Assemble final payload matching the new schema
+    const finalPayload = {
+        data: simulatedData,
+        response: simulatedResponse,
+        signature: signature,
+        agent_address: mockAgentWallet.address
+    };
+
+    return JSON.stringify(finalPayload);
 }
 
 const PORT = process.env.PORT || 3000;

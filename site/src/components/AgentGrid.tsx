@@ -4,6 +4,19 @@ import { motion } from "framer-motion";
 import { Bot, Shield, TrendingUp, CheckCircle, BrainCircuit } from "lucide-react";
 import Link from "next/link";
 import { useEffect, useState } from "react";
+import { createPublicClient, http, parseAbi } from "viem";
+
+// Contract Configuration
+const CONTRACT_ADDRESS = "0xCf8fbb38D1352A9c418025720D9F2F0BF1740F38";
+const RPC_URL = "https://virtual.base-sepolia.eu.rpc.tenderly.co/04f5e39c-873d-4198-b9b6-ed311b7406b0";
+
+const ABI = parseAbi([
+    "function agentProfiles(uint256) view returns (bool isRegistered, bool isBlacklisted, uint256 score, uint256 lastUpdated, uint256 assertionCount)"
+]);
+
+const publicClient = createPublicClient({
+    transport: http(RPC_URL)
+});
 
 // Mock Data for the Agents
 export const AGENTS = [
@@ -104,62 +117,119 @@ const ScoreRing = ({ score }: { score: number }) => {
 };
 
 export default function AgentGrid() {
+    const [liveAgents, setLiveAgents] = useState(AGENTS);
+
+    useEffect(() => {
+        let isMounted = true;
+
+        const fetchAllAgents = async () => {
+            try {
+                const updatedAgents = await Promise.all(
+                    AGENTS.map(async (agent) => {
+                        try {
+                            const profile = await publicClient.readContract({
+                                address: CONTRACT_ADDRESS,
+                                abi: ABI,
+                                functionName: 'agentProfiles',
+                                args: [BigInt(agent.id)]
+                            }) as [boolean, boolean, bigint, bigint, bigint];
+
+                            // Override static mock with live data only if agent is actually registered on-chain
+                            const isRegistered = profile[0];
+                            if (isRegistered) {
+                                return {
+                                    ...agent,
+                                    score: Number(profile[2]),
+                                    transactions: Number(profile[4])
+                                };
+                            } else {
+                                return agent;
+                            }
+                        } catch (e) {
+                            return agent; // fallback to mock if single fetch fails
+                        }
+                    })
+                );
+
+                if (isMounted) {
+                    setLiveAgents(updatedAgents);
+                }
+            } catch (err) {
+                console.error("Failed to fetch live agent grid:", err);
+            }
+        };
+
+        // Initial fetch
+        fetchAllAgents();
+
+        // Polling every 10 seconds
+        const intervalId = setInterval(fetchAllAgents, 10000);
+
+        return () => {
+            isMounted = false;
+            clearInterval(intervalId);
+        };
+    }, []);
+
     return (
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 w-full max-w-6xl mx-auto py-12 px-4">
-            {AGENTS.map((agent, i) => (
+            {liveAgents.map((agent, i) => (
                 <motion.div
                     key={agent.id}
                     initial={{ opacity: 0, y: 20 }}
                     animate={{ opacity: 1, y: 0 }}
                     transition={{ duration: 0.5, delay: i * 0.15 }}
                     whileHover={{ y: -5, scale: 1.02 }}
-                    className="glass-panel p-6 rounded-2xl flex flex-col justify-between h-[360px] relative group overflow-hidden cursor-pointer"
                 >
-                    {/* Subtle background glow effect on hover */}
-                    <div className="absolute inset-0 bg-gradient-to-br from-[#2A5ADA]/0 to-[#00D8FF]/0 group-hover:from-[#2A5ADA]/10 group-hover:to-[#00D8FF]/10 transition-all duration-500 rounded-2xl pointer-events-none" />
+                    <Link
+                        href={`/agent/${agent.id}`}
+                        aria-label={`View ${agent.name} details`}
+                        className="glass-panel p-6 rounded-2xl flex flex-col justify-between h-[360px] relative group overflow-hidden cursor-pointer block"
+                    >
+                        {/* Subtle background glow effect on hover */}
+                        <div className="absolute inset-0 bg-gradient-to-br from-[#2A5ADA]/0 to-[#00D8FF]/0 group-hover:from-[#2A5ADA]/10 group-hover:to-[#00D8FF]/10 transition-all duration-500 rounded-2xl pointer-events-none" />
 
-                    <Link href={`/agent/${agent.id}`} className="absolute inset-0 z-10 w-full h-full" aria-label={`View ${agent.name} details`} />
-
-                    <div className="relative z-20 pointer-events-none">
-                        <div className="flex justify-between items-start mb-4">
-                            <div className="flex items-center gap-3">
-                                <div className="p-3 bg-blue-900/40 rounded-xl border border-blue-800/50">
-                                    <agent.icon className="w-6 h-6 text-[#00D8FF]" />
+                        <div className="relative z-20 pointer-events-none">
+                            <div className="flex justify-between items-start mb-4">
+                                <div className="flex items-center gap-3">
+                                    <div className="p-3 bg-blue-900/40 rounded-xl border border-blue-800/50">
+                                        <agent.icon className="w-6 h-6 text-[#00D8FF]" />
+                                    </div>
+                                    <div>
+                                        <h3 className="font-bold text-lg text-white pointer-events-auto group-hover:text-[#00D8FF] transition-colors">{agent.name}</h3>
+                                        <span className="text-xs font-medium text-blue-400 bg-blue-900/30 px-2 py-1 rounded-full">
+                                            {agent.type}
+                                        </span>
+                                    </div>
                                 </div>
-                                <div>
-                                    <h3 className="font-bold text-lg text-white pointer-events-auto group-hover:text-[#00D8FF] transition-colors">{agent.name}</h3>
-                                    <span className="text-xs font-medium text-blue-400 bg-blue-900/30 px-2 py-1 rounded-full">
-                                        {agent.type}
-                                    </span>
+                            </div>
+
+                            <p className="text-gray-400 text-sm leading-relaxed mb-6">
+                                {agent.description}
+                            </p>
+                        </div>
+
+                        <div className="relative z-20 flex items-center justify-between border-t border-gray-800 pt-4 cursor-pointer pointer-events-none">
+                            <div className="flex flex-col">
+                                <span className="text-xs text-gray-500 mb-1 flex items-center gap-1">
+                                    <CheckCircle className="w-3 h-3 text-[#2A5ADA]" /> Protocol Score
+                                </span>
+                                <ScoreRing score={agent.score} />
+                            </div>
+
+                            <div className="flex flex-col items-end">
+                                <span className="text-xs text-gray-500 mb-1 flex items-center gap-1">
+                                    <BrainCircuit className="w-3 h-3" /> Executions
+                                </span>
+                                <span className="font-mono text-gray-300 font-semibold">
+                                    {agent.transactions.toLocaleString()}
+                                </span>
+                                <div className="mt-4 flex items-center text-sm text-[#00D8FF] font-medium group-hover:translate-x-1 transition-transform">
+                                    View Agent →
                                 </div>
                             </div>
                         </div>
-
-                        <p className="text-gray-400 text-sm leading-relaxed mb-6">
-                            {agent.description}
-                        </p>
-                    </div>
-
-                    <div className="relative z-20 flex items-center justify-between border-t border-gray-800 pt-4">
-                        <div className="flex flex-col">
-                            <span className="text-xs text-gray-500 mb-1 flex items-center gap-1">
-                                <CheckCircle className="w-3 h-3 text-[#2A5ADA]" /> Protocol Score
-                            </span>
-                            <ScoreRing score={agent.score} />
-                        </div>
-
-                        <div className="flex flex-col items-end">
-                            <span className="text-xs text-gray-500 mb-1 flex items-center gap-1">
-                                <BrainCircuit className="w-3 h-3" /> Executions
-                            </span>
-                            <span className="font-mono text-gray-300 font-semibold">
-                                {agent.transactions.toLocaleString()}
-                            </span>
-                            <div className="mt-4 flex items-center text-sm text-[#00D8FF] font-medium group-hover:translate-x-1 transition-transform">
-                                View Agent →
-                            </div>
-                        </div>
-                    </div>
+                    </Link>
                 </motion.div>
             ))}
         </div>
