@@ -33,4 +33,23 @@ When the user queries the agent, the payload is intercepted by the Gateway and p
 ## 🏆 Chainlink Convergence Hackathon Implementation
 This workflow is the crux of our Hackathon submission. It successfully bridges the gap, allowing off-chain sovereign agents to securely build trustless on-chain reputation.
 
-*(Include specific Workflow UUIDs, JSON deployment manifests, or screenshot architectures specific to your hackathon sandbox here.)*
+## 🚀 Deployment Instructions
+
+To deploy this workflow to the live Chainlink Decentralized Oracle Network (DON) so it actually writes to the Base Sepolia EVM, follow these steps:
+
+1. **Compile the Workflow**: 
+   Bundle your TypeScript code using the Chainlink CRE CLI or your preferred bundler (like `esbuild` or `tsc`) so it's ready to be executed by the WASM runtime.
+
+2. **Host the Code Publicly**: 
+   The Chainlink nodes need to download your compiled workflow. 
+   - Push the compiled `bundle.js` to a public GitHub repository.
+   - Alternatively, create a public **GitHub Gist** and paste the compiled code.
+
+3. **Deploy using the Raw URL**:
+   Get the "Raw" URL for your code (e.g., `https://raw.githubusercontent.com/.../bundle.js` or `https://gist.githubusercontent.com/.../raw/...`) and run the deployment command:
+
+```bash
+cre workflow deploy --name AgentScore-Staging --url <YOUR_GITHUB_RAW_URL> --target staging-settings
+```
+
+Once deployed, the Chainlink DON will monitor for triggers and successfully execute the `submitAssertion` transactions on your live smart contract.
