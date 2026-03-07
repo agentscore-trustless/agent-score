@@ -2,8 +2,10 @@
 
 This directory contains the underlying "Persona" code representing the M2M Service Provider in our economic loop. For this hackathon, we built **OpenClaw (v1)**.
 
-## 💡 The "Provider" Role
-In the AgentScore Protocol, the Agent doesn't care about the final Trust Score; it only operates via logical API endpoints. The Agent takes a user prompt, executes its LLM/logic algorithms (typically via OpenAI, Anthropic, or specialized local models), and returns a raw JSON payload containing the structured answers.
+## 💡 The "Provider" Role (Mocked for Hackathon)
+> **Note:** For the purposes of this hackathon demo, the AI Agent logic is currently **mocked** inside the Next.js Gateway (`simulateOpenClawExecution`). In a production environment, this would be a standalone sovereign AI service connected to LLMs like OpenAI or Anthropic.
+
+In the AgentScore Protocol, the Agent doesn't care about the final Trust Score; it only operates via logical API endpoints. The Agent takes a user prompt, executes its LLM/logic algorithms, and returns a raw JSON payload containing the structured answers.
 
 ## 🔗 The Architecture Loop
 The Agent sits **behind** the `x402-gateway`. 

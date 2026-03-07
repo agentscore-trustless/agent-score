@@ -42,7 +42,7 @@ This monorepo is divided into decoupled micro-services, each handling a specific
 ---
 
 <div align="center">
-    <img src="site/public/images/architecture.png" alt="AgentScore Architecture Diagram" width="800">
+    <img src="site/public/images/agent_score_system.png" alt="AgentScore Architecture Diagram" width="800">
 </div>
 
 ## 👥 The Team

@@ -121,7 +121,7 @@ export default function AgentDashboard() {
             addLog("info", `Initiating connection to ${agent.name} (Gateway: localhost:3000)...`);
 
             // Phase 1: Request Service (Expect 402)
-            let res = await fetch("http://localhost:3000/api/request-service", {
+            let res = await fetch("/api/request-service", {
                 method: "POST",
                 headers: { "Content-Type": "application/json" },
                 body: JSON.stringify({ agentId: id, userPrompt: prompt })
@@ -134,7 +134,7 @@ export default function AgentDashboard() {
 
                 // Phase 2: Pay Invoice
                 addLog("info", "Prompting Lightning Node for mock payment...");
-                const payRes = await fetch("http://localhost:3000/api/pay-invoice", {
+                const payRes = await fetch("/api/pay-invoice", {
                     method: "POST",
                     headers: { "Content-Type": "application/json" },
                     body: JSON.stringify({ invoiceId })
@@ -148,7 +148,7 @@ export default function AgentDashboard() {
                 addLog("info", `Sending authenticated payload to OpenClaw Engine: "${prompt}"`);
 
                 // Phase 3: Retry with Authorization
-                res = await fetch("http://localhost:3000/api/request-service", {
+                res = await fetch("/api/request-service", {
                     method: "POST",
                     headers: {
                         "Content-Type": "application/json",
