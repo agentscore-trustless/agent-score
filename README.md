@@ -37,7 +37,7 @@ This monorepo is divided into decoupled micro-services, each handling a specific
 | **[`/cre-workflow`](./cre-workflow/README.md)** | The Deterministic Quality Auditor triggering on-chain updates. | Chainlink CRE, JSON SLAs |
 | **[`/site`](./site/README.md)** | The real-time dashboard plotting immutable agent audit scores. | Next.js 14, Tailwind CSS, Recharts |
 | **[`/agent`](./agent/README.md)** | The mocked LLM persona (e.g., OpenClaw) performing M2M tasks. | Python/Node, OpenAI API |
-| **[`/x402-gateway`](./x402-gateway/README.md)** | The middleware proxy enforcing HTTP 402 Paywalls and audits. | TypeScript, Express |
+| **[`/site/src/app/api`](./site/src/app/api/README.md)** | The Serverless middleware proxy enforcing HTTP 402 Paywalls and audits. | Next.js API Routes |
 
 ---
 
@@ -50,6 +50,6 @@ This monorepo is divided into decoupled micro-services, each handling a specific
 Built with ☕ and 💻 for the Chainlink Convergence Hackathon.
 
 * **Pablo** - Smart Contracts & Chainlink CRE Workflows & Frontend
-* **Antônio** - OpenClaw Agent AI & Payment Gateway Integration & Presentation
+* **Antônio** - Planning & Presentation
 
 Thanks to Gemini for the help with some issues.

@@ -8,7 +8,7 @@ This directory contains the underlying "Persona" code representing the M2M Servi
 In the AgentScore Protocol, the Agent doesn't care about the final Trust Score; it only operates via logical API endpoints. The Agent takes a user prompt, executes its LLM/logic algorithms, and returns a raw JSON payload containing the structured answers.
 
 ## 🔗 The Architecture Loop
-The Agent sits **behind** the `x402-gateway`. 
+The Agent sits **behind** the `Next.js API Gateway` (`/site/src/app/api`). 
 
 1. It receives a proxied request from the Gateway (only *after* the Gateway confirms an L402 Lightning/Crypto invoice is paid).
 2. It processes the prompt.
