@@ -208,40 +208,36 @@ const onHttpTrigger = async (runtime: Runtime<Config>, request: HTTPPayload): Pr
     const isValidSla = auditResult.body.auditStatus === "PASSED";
 
     // 2. Contract Writer Capability: Write to Base Testnet
-    runtime.log(`[Chainlink DON] 3. Evaluating Output for Contract Writer Capability`);
-    if (isValidSla) {
-        try {
-            const evm = new cre.capabilities.EVMClient(cre.capabilities.EVMClient.SUPPORTED_CHAIN_SELECTORS['ethereum-testnet-sepolia-base-1']);
+    runtime.log(`[Chainlink DON] 3. Submitting Assertion for Contract Writer Capability`);
+    try {
+        const evm = new cre.capabilities.EVMClient(cre.capabilities.EVMClient.SUPPORTED_CHAIN_SELECTORS['ethereum-testnet-sepolia-base-1']);
 
-            // Create 32-byte Evidence Hash dynamically from audit message
-            const evidenceHash = stringToHex(auditResult.body.message.substring(0, 32), { size: 32 }) as Hex;
+        // Create 32-byte Evidence Hash dynamically from audit message
+        const evidenceHash = stringToHex(auditResult.body.message.substring(0, 32), { size: 32 }) as Hex;
 
-            const writeData = encodeFunctionData({
-                abi: AGENT_SCORE_REGISTRY_ABI,
-                functionName: "submitAssertion",
-                args: [
-                    BigInt(parsedBody.agentId || 1),
-                    BigInt(scoreDelta),
-                    evidenceHash
-                ]
-            });
+        const writeData = encodeFunctionData({
+            abi: AGENT_SCORE_REGISTRY_ABI,
+            functionName: "submitAssertion",
+            args: [
+                BigInt(parsedBody.agentId || 1),
+                BigInt(scoreDelta),
+                evidenceHash
+            ]
+        });
 
-            runtime.log(`   └─ Tx -> submitAssertion(AgentID: ${parsedBody.agentId}, Delta: +${scoreDelta}, Evidence: ...${evidenceHash.substring(0, 8)})`);
+        runtime.log(`   └─ Tx -> submitAssertion(AgentID: ${parsedBody.agentId}, Delta: ${scoreDelta > 0 ? '+' : ''}${scoreDelta}, Evidence: ...${evidenceHash.substring(0, 8)})`);
 
-            const report = runtime.report(prepareReportRequest(writeData)).result();
+        const report = runtime.report(prepareReportRequest(writeData)).result();
 
-            const tx = evm.writeReport(runtime, {
-                receiver: runtime.config.contractAddress,
-                report: report
-            }).result();
+        const tx = evm.writeReport(runtime, {
+            receiver: runtime.config.contractAddress,
+            report: report
+        }).result();
 
-            runtime.log(`   └─ Success: Triggered capability ${cre.capabilities.EVMClient.CAPABILITY_ID}`);
+        runtime.log(`   └─ Success: Triggered capability ${cre.capabilities.EVMClient.CAPABILITY_ID}`);
 
-        } catch (err: any) {
-            runtime.log(`   └─ Error submitting assertion via DON: ${err.message}`);
-        }
-    } else {
-        runtime.log(`   └─ SLA FAILED (${scoreDelta}). Aborting Contract Writer Capability.`);
+    } catch (err: any) {
+        runtime.log(`   └─ Error submitting assertion via DON: ${err.message}`);
     }
 
     // Return the audited payload back through the HTTP capability to the Gateway

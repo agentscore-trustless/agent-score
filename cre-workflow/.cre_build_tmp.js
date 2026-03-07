@@ -18507,32 +18507,28 @@ var onHttpTrigger = async (runtime2, request) => {
   const auditResult = await handleAgentAudit(requestObject);
   const scoreDelta = auditResult.body.reputationImpact;
   const isValidSla = auditResult.body.auditStatus === "PASSED";
-  runtime2.log(`[Chainlink DON] 3. Evaluating Output for Contract Writer Capability`);
-  if (isValidSla) {
-    try {
-      const evm = new cre.capabilities.EVMClient(cre.capabilities.EVMClient.SUPPORTED_CHAIN_SELECTORS["ethereum-testnet-sepolia-base-1"]);
-      const evidenceHash = stringToHex(auditResult.body.message.substring(0, 32), { size: 32 });
-      const writeData = encodeFunctionData({
-        abi: AGENT_SCORE_REGISTRY_ABI,
-        functionName: "submitAssertion",
-        args: [
-          BigInt(parsedBody.agentId || 1),
-          BigInt(scoreDelta),
-          evidenceHash
-        ]
-      });
-      runtime2.log(`   └─ Tx -> submitAssertion(AgentID: ${parsedBody.agentId}, Delta: +${scoreDelta}, Evidence: ...${evidenceHash.substring(0, 8)})`);
-      const report2 = runtime2.report(prepareReportRequest(writeData)).result();
-      const tx = evm.writeReport(runtime2, {
-        receiver: runtime2.config.contractAddress,
-        report: report2
-      }).result();
-      runtime2.log(`   └─ Success: Triggered capability ${cre.capabilities.EVMClient.CAPABILITY_ID}`);
-    } catch (err) {
-      runtime2.log(`   └─ Error submitting assertion via DON: ${err.message}`);
-    }
-  } else {
-    runtime2.log(`   └─ SLA FAILED (${scoreDelta}). Aborting Contract Writer Capability.`);
+  runtime2.log(`[Chainlink DON] 3. Submitting Assertion for Contract Writer Capability`);
+  try {
+    const evm = new cre.capabilities.EVMClient(cre.capabilities.EVMClient.SUPPORTED_CHAIN_SELECTORS["ethereum-testnet-sepolia-base-1"]);
+    const evidenceHash = stringToHex(auditResult.body.message.substring(0, 32), { size: 32 });
+    const writeData = encodeFunctionData({
+      abi: AGENT_SCORE_REGISTRY_ABI,
+      functionName: "submitAssertion",
+      args: [
+        BigInt(parsedBody.agentId || 1),
+        BigInt(scoreDelta),
+        evidenceHash
+      ]
+    });
+    runtime2.log(`   └─ Tx -> submitAssertion(AgentID: ${parsedBody.agentId}, Delta: ${scoreDelta > 0 ? "+" : ""}${scoreDelta}, Evidence: ...${evidenceHash.substring(0, 8)})`);
+    const report2 = runtime2.report(prepareReportRequest(writeData)).result();
+    const tx = evm.writeReport(runtime2, {
+      receiver: runtime2.config.contractAddress,
+      report: report2
+    }).result();
+    runtime2.log(`   └─ Success: Triggered capability ${cre.capabilities.EVMClient.CAPABILITY_ID}`);
+  } catch (err) {
+    runtime2.log(`   └─ Error submitting assertion via DON: ${err.message}`);
   }
   return auditResult;
 };

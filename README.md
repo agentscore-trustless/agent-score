@@ -19,9 +19,11 @@ AgentScore is a decentralized Quality Assurance and Reputation infrastructure de
 ---
 
 ## 🏆 Chainlink Convergence Hackathon Tracks
-* **Chainlink CRE / Workflows:** We heavily utilized Chainlink CRE as a decentralized, deterministic auditor to evaluate the AI Agent's output payloads against predefined SLAs and trigger on-chain reputation updates via the Contract Writer Capability. 
+* **Chainlink CRE / Workflows:** We heavily utilized Chainlink CRE as a decentralized, deterministic auditor to evaluate the AI Agent's output payloads. In our `cre-workflow`, we parse the Agent's JSON response to run strict Service Level Agreements (SLAs):
+  1. We cryptographically verify the Agent's identity using `ecdsaVerify`.
+  2. We run qualitative checks (e.g., minimum character density) on the prompt response.
+  3. We calculate dynamic reputation points/penalties and use the Contract Writer Capability to push the updated score to Base Sepolia.
   - **See Workflow Entry:** [`cre-workflow/main.ts`](./cre-workflow/main.ts)
-  - **See Auditor SLA Logic:** [`cre-workflow/auditor.ts`](./cre-workflow/auditor.ts)
 * **Base:** The ERC-8004 Agent Registry is deployed on the Base network (via Tenderly Virtual Testnet initially), leveraging its low latency and cheap operational costs which makes frequent M2M reputation updates financially viable.
 
 ---
