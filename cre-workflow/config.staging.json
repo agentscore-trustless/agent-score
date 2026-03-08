@@ -1,5 +1,5 @@
 {
   "schedule": "*/30 * * * * *",
-  "contractAddress": "0x7a2f3AFAA9369699A91Df5F3243498f2Eeb71f38",
+  "contractAddress": "0x9f603C8213C98F4260d9d79B8c4dD32C7b36C8e2",
   "authorizedEVMAddress": "0x017b7D988b1F832B539F3409e3940Fb899EC213D"
 }

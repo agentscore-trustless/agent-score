@@ -7,7 +7,7 @@ import { useEffect, useState } from "react";
 import { createPublicClient, http, parseAbi } from "viem";
 
 // Contract Configuration
-const CONTRACT_ADDRESS = "0x7a2f3AFAA9369699A91Df5F3243498f2Eeb71f38";
+const CONTRACT_ADDRESS = "0x9f603C8213C98F4260d9d79B8c4dD32C7b36C8e2";
 const RPC_URL = "https://sepolia.base.org";
 
 const ABI = parseAbi([

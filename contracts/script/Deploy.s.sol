@@ -14,9 +14,10 @@ contract DeployScript is Script {
 
         vm.startBroadcast(deployerPrivateKey);
 
-        // Deploy Registry with deployer as admin
+        // Deploy Registry with deployer as admin and Chainlink CRE Forwarder for Base Sepolia
         AgentScoreRegistry registry = new AgentScoreRegistry(
             deployer,
+            0xaF3202F6bAEbA50d37e0d4B0b870455EDF198D7c,
             "AgentScoreIdentity",
             "ASI"
         );

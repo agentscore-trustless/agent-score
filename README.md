@@ -14,16 +14,13 @@ AgentScore is a decentralized Quality Assurance and Reputation infrastructure de
 ### 🔗 Quick Links
 - **💻 Technical Demo Video:** [Link to YouTube/Vimeo]
 - **🌐 Live Dashboard:** [https://agent-score-protocol.vercel.app](https://agent-score-protocol.vercel.app)
-- **📜 Smart Contract (Base Sepolia):** [0x7a2f3AFAA9369699A91Df5F3243498f2Eeb71f38](https://sepolia.basescan.org/address/0x7a2f3AFAA9369699A91Df5F3243498f2Eeb71f38)
+- **📜 Smart Contract (Base Sepolia):** [0x9f603C8213C98F4260d9d79B8c4dD32C7b36C8e2](https://sepolia.basescan.org/address/0x9f603C8213C98F4260d9d79B8c4dD32C7b36C8e2)
 - **🔍 Tenderly MVP Dashboard:** [Virtual Testnet Explorer](https://dashboard.tenderly.co/explorer/vnet/281aea81-757b-465f-bb4a-dac1e95a9882/transactions)
 
 ---
 
 ## 🏆 Chainlink Convergence Hackathon Tracks
 * **Chainlink CRE / Workflows:** We heavily utilized Chainlink CRE as a decentralized, deterministic auditor to evaluate the AI Agent's output payloads. In our `cre-workflow`, we parse the Agent's JSON response to run strict Service Level Agreements (SLAs):
-  1. We cryptographically verify the Agent's identity using `ecdsaVerify`.
-  2. We run qualitative checks (e.g., minimum character density) on the prompt response.
-  3. We calculate dynamic reputation points/penalties and use the Contract Writer Capability to push the updated score to Base Sepolia.
   - **See Workflow Entry:** [`cre-workflow/main.ts`](./cre-workflow/main.ts)
 * **Base:** The ERC-8004 Agent Registry is deployed on the Base Sepolia Testnet, leveraging its low latency and cheap operational costs which makes frequent M2M reputation updates financially viable. *(Note: Our initial MVP and smart contract testing was built using Tenderly Virtual Testnets for rapid iteration, before migrating to the public Base Sepolia testnet to support the live Chainlink CRE DON integration.)*
 
@@ -40,7 +37,7 @@ This monorepo is divided into decoupled micro-services, each handling a specific
 | **[`/cre-workflow`](./cre-workflow/README.md)** | The Deterministic Quality Auditor triggering on-chain updates. | Chainlink CRE, JSON SLAs |
 | **[`/site`](./site/README.md)** | The real-time dashboard plotting immutable agent audit scores. | Next.js 14, Tailwind CSS, Recharts |
 | **[`/agent`](./agent/README.md)** | The mocked LLM persona (e.g., OpenClaw) performing M2M tasks. | Python/Node, OpenAI API |
-| **[`/site/src/app/api`](./site/src/app/api/README.md)** | The Serverless middleware proxy enforcing HTTP 402 Paywalls and audits. | Next.js API Routes |
+| **[`/api`](./site/src/app/api/README.md)** | The Serverless middleware proxy enforcing HTTP 402 Paywalls and audits. | Next.js API Routes |
 
 ---
 
@@ -55,4 +52,4 @@ Built with ☕ and 💻 for the Chainlink Convergence Hackathon.
 * **Pablo** - Smart Contracts & Chainlink CRE Workflows & Frontend
 * **Antônio** - Planning & Presentation
 
-Thanks to Gemini for the help with some issues.
+Thanks to Chainlink Support and Gemini AI for help with some issues.

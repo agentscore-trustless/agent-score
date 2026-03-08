@@ -1,5 +1,5 @@
 import { cre, prepareReportRequest, handler, Runner, type Runtime, type HTTPPayload } from "@chainlink/cre-sdk";
-import { encodeFunctionData, stringToHex, keccak256, recoverAddress, type Address, type Hex } from "viem";
+import { encodeAbiParameters, parseAbiParameters, stringToHex, keccak256, recoverAddress, type Address, type Hex } from "viem";
 
 // Define the runtime configuration injection interface
 type Config = {
@@ -167,20 +167,7 @@ async function handleAgentAudit(request: any) {
     };
 }
 
-// ABI for the Base Sepolia Registry
-const AGENT_SCORE_REGISTRY_ABI = [
-    {
-        type: "function",
-        name: "submitAssertion",
-        inputs: [
-            { name: "agentId", type: "uint256" },
-            { name: "scoreDelta", type: "int256" },
-            { name: "data", type: "bytes" }
-        ],
-        outputs: []
-    }
-];
-
+// IReceiver Payload Format
 /**
  * ======================================================================
  * CHAINLINK CRE + WORKFLOW EXECUTOR
@@ -215,17 +202,16 @@ const onHttpTrigger = async (runtime: Runtime<Config>, request: HTTPPayload): Pr
         // Convert audit message into variable-length bytes (Hex string)
         const evidenceData = stringToHex(auditResult.body.message) as Hex;
 
-        const writeData = encodeFunctionData({
-            abi: AGENT_SCORE_REGISTRY_ABI,
-            functionName: "submitAssertion",
-            args: [
+        const writeData = encodeAbiParameters(
+            parseAbiParameters('uint256, int256, bytes'),
+            [
                 BigInt(parsedBody.agentId || 1),
                 BigInt(scoreDelta),
                 evidenceData
             ]
-        });
+        );
 
-        runtime.log(`   └─ Tx -> submitAssertion(AgentID: ${parsedBody.agentId}, Delta: ${scoreDelta > 0 ? '+' : ''}${scoreDelta}, Evidence: ...${evidenceData.substring(0, 8)})`);
+        runtime.log(`   └─ Tx -> onReport(AgentID: ${parsedBody.agentId}, Delta: ${scoreDelta > 0 ? '+' : ''}${scoreDelta}, Evidence: ...${evidenceData.substring(0, 8)})`);
 
         const report = runtime.report(prepareReportRequest(writeData)).result();
 

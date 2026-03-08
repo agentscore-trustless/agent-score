@@ -8,7 +8,7 @@ const privateKey = '0x5d1c9d94c81fc6c7ff5cc364b64b6d4270c0fecb44389129982dde7a21
 const wallet = new ethers.Wallet(privateKey, provider);
 
 // AgentScoreRegistry Contract Address
-const contractAddress = '0x7a2f3AFAA9369699A91Df5F3243498f2Eeb71f38';
+const contractAddress = '0x9f603C8213C98F4260d9d79B8c4dD32C7b36C8e2';
 
 // Chainlink CRE Forwarder on Base Sepolia
 const forwarderAddress = '0xaF3202F6bAEbA50d37e0d4B0b870455EDF198D7c';
