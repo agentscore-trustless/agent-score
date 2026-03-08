@@ -18729,7 +18729,10 @@ var onHttpTrigger = async (runtime2, request) => {
     const report2 = runtime2.report(prepareReportRequest(writeData)).result();
     const tx = evm.writeReport(runtime2, {
       receiver: runtime2.config.contractAddress,
-      report: report2
+      report: report2,
+      gasConfig: {
+        gasLimit: "1000000"
+      }
     }).result();
     runtime2.log(`   └─ Success: Triggered capability ${cre.capabilities.EVMClient.CAPABILITY_ID}`);
   } catch (err) {
