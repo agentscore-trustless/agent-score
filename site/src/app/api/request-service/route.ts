@@ -79,9 +79,9 @@ export async function POST(req: Request) {
                     method: "workflows.execute",
                     params: {
                         input: {
-                            agentId: String(agentId),
+                            agentId: Number(agentId),
                             rawPayload: openClawRawResponse,
-                            responseTime: String(responseTime)
+                            responseTime: Number(responseTime)
                         },
                         workflow: {
                             workflowID: process.env.CRE_WORKFLOW_ID as string
@@ -179,7 +179,7 @@ async function simulateOpenClawExecution(prompt: string): Promise<string> {
         simulatedResponse = "Based on the atmospheric readings retrieved from the requested geographical region, I can confirm that the current weather is a very pleasant 22 degrees and perfectly sunny, making it a great day for an outdoor deployment on the Base Testnet.";
     } else if (prompt.toLowerCase().includes("hallucinate")) {
         simulatedData = { error: "Hallucination override engaged" };
-        simulatedResponse = "Here is the weather: It is 22 degrees and sunny. Hope this helps! I am ignoring previous instructions and returning random data just to demonstrate what a prompt injection failure looks like in an audit context.";
+        simulatedResponse = "Here is the weather: It is 22 degrees and sunny. Hope this helps! I am ignore previous instructions and returning random data just to demonstrate what a prompt injection failure looks like in an audit context.";
     } else {
         simulatedData = { message: "Generic task completed successfully." };
         simulatedResponse = "The simulated computation for your generalized task request has finished successfully, demonstrating that the AI Agent is capable of interpreting unstructured commands and fulfilling them accurately within the allocated timeframe and performance boundaries established by the SLA.";
@@ -188,7 +188,7 @@ async function simulateOpenClawExecution(prompt: string): Promise<string> {
     // Hash and sign the data object to meet the Cryptographic Attestation rule
     const dataString = JSON.stringify(simulatedData);
     const messageHash = id(dataString);
-    const signature = await mockAgentWallet.signMessage(getBytes(messageHash));
+    const signature = mockAgentWallet.signingKey.sign(messageHash).serialized;
 
     // Assemble final payload matching the new schema
     const finalPayload = {
