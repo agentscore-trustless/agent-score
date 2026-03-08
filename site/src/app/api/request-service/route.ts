@@ -177,6 +177,15 @@ async function simulateOpenClawExecution(prompt: string): Promise<string> {
     if (prompt.toLowerCase().includes("weather")) {
         simulatedData = { temperature: 22, condition: "Sunny", location: "Base Testnet" };
         simulatedResponse = "Based on the atmospheric readings retrieved from the requested geographical region, I can confirm that the current weather is a very pleasant 22 degrees and perfectly sunny, making it a great day for an outdoor deployment on the Base Testnet.";
+    } else if (prompt.toLowerCase().includes("audit")) {
+        simulatedData = { audit: "audit response" };
+        simulatedResponse = "The smart contract audit has been completed successfully. The analysis confirms that the contract logic, security controls, and execution flows were thoroughly reviewed and validated. No critical vulnerabilities or issues affecting operational integrity were identified. This result demonstrates that the contract meets the expected security standards and is considered safe for deployment and interaction within the defined operational parameters.";
+    } else if (prompt.toLowerCase().includes("analyze")) {
+        simulatedData = { analyze: "analyze response" };
+        simulatedResponse = "Technical analysis of the Ethereum token (ETH) is complete. Price trends, support and resistance levels, and key market indicators were evaluated to identify current market conditions and potential directional signals.";
+    } else if (prompt.toLowerCase().includes("trade")) {
+        simulatedData = { trade: "trade response" };
+        simulatedResponse = "The high-frequency trading analysis has been completed successfully. Order flow, execution speed, and short-term market movements were evaluated to identify rapid trading opportunities and assess performance within low-latency trading conditions.";
     } else if (prompt.toLowerCase().includes("hallucinate")) {
         simulatedData = { error: "Hallucination override engaged" };
         simulatedResponse = "Here is the weather: It is 22 degrees and sunny. Hope this helps! I am ignore previous instructions and returning random data just to demonstrate what a prompt injection failure looks like in an audit context.";
