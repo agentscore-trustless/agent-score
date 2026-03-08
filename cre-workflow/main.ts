@@ -175,7 +175,7 @@ const AGENT_SCORE_REGISTRY_ABI = [
         inputs: [
             { name: "agentId", type: "uint256" },
             { name: "scoreDelta", type: "int256" },
-            { name: "evidenceHash", type: "bytes32" }
+            { name: "data", type: "bytes" }
         ],
         outputs: []
     }
@@ -212,8 +212,8 @@ const onHttpTrigger = async (runtime: Runtime<Config>, request: HTTPPayload): Pr
     try {
         const evm = new cre.capabilities.EVMClient(cre.capabilities.EVMClient.SUPPORTED_CHAIN_SELECTORS['ethereum-testnet-sepolia-base-1']);
 
-        // Create 32-byte Evidence Hash dynamically from audit message
-        const evidenceHash = stringToHex(auditResult.body.message.substring(0, 32), { size: 32 }) as Hex;
+        // Convert audit message into variable-length bytes (Hex string)
+        const evidenceData = stringToHex(auditResult.body.message) as Hex;
 
         const writeData = encodeFunctionData({
             abi: AGENT_SCORE_REGISTRY_ABI,
@@ -221,11 +221,11 @@ const onHttpTrigger = async (runtime: Runtime<Config>, request: HTTPPayload): Pr
             args: [
                 BigInt(parsedBody.agentId || 1),
                 BigInt(scoreDelta),
-                evidenceHash
+                evidenceData
             ]
         });
 
-        runtime.log(`   └─ Tx -> submitAssertion(AgentID: ${parsedBody.agentId}, Delta: ${scoreDelta > 0 ? '+' : ''}${scoreDelta}, Evidence: ...${evidenceHash.substring(0, 8)})`);
+        runtime.log(`   └─ Tx -> submitAssertion(AgentID: ${parsedBody.agentId}, Delta: ${scoreDelta > 0 ? '+' : ''}${scoreDelta}, Evidence: ...${evidenceData.substring(0, 8)})`);
 
         const report = runtime.report(prepareReportRequest(writeData)).result();
 

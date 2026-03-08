@@ -7,8 +7,8 @@ import { useEffect, useState } from "react";
 import { createPublicClient, http, parseAbi } from "viem";
 
 // Contract Configuration
-const CONTRACT_ADDRESS = "0xCf8fbb38D1352A9c418025720D9F2F0BF1740F38";
-const RPC_URL = "https://virtual.base-sepolia.eu.rpc.tenderly.co/04f5e39c-873d-4198-b9b6-ed311b7406b0";
+const CONTRACT_ADDRESS = "0x7a2f3AFAA9369699A91Df5F3243498f2Eeb71f38";
+const RPC_URL = "https://sepolia.base.org";
 
 const ABI = parseAbi([
     "function agentProfiles(uint256) view returns (bool isRegistered, bool isBlacklisted, uint256 score, uint256 lastUpdated, uint256 assertionCount)"

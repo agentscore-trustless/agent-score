@@ -1,14 +1,14 @@
 const { ethers } = require('ethers');
 
 // Base Sepolia JSON-RPC
-const provider = new ethers.JsonRpcProvider('https://virtual.base-sepolia.eu.rpc.tenderly.co/04f5e39c-873d-4198-b9b6-ed311b7406b0');
+const provider = new ethers.JsonRpcProvider('https://sepolia.base.org');
 
 // Your Private Key from .env
 const privateKey = '0x5d1c9d94c81fc6c7ff5cc364b64b6d4270c0fecb44389129982dde7a2192a531';
 const wallet = new ethers.Wallet(privateKey, provider);
 
 // AgentScoreRegistry Contract Address
-const contractAddress = '0xCf8fbb38D1352A9c418025720D9F2F0BF1740F38';
+const contractAddress = '0x7a2f3AFAA9369699A91Df5F3243498f2Eeb71f38';
 
 // Chainlink CRE Forwarder on Base Sepolia
 const forwarderAddress = '0xaF3202F6bAEbA50d37e0d4B0b870455EDF198D7c';

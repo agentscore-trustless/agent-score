@@ -30,9 +30,9 @@ We've built a comprehensive test suite to verify the score clamping, access cont
 forge test
 ```
 
-### 3. Deploy to Base (Tenderly Virtual Testnet)
-During the hackathon, we deployed to Base Sepolia/Tenderly.
+### 3. Deploy to Base Sepolia Testnet
+During the initial phases of the hackathon, we built and tested our smart contracts using **Tenderly Virtual Testnets** to enable rapid iteration. Once the Chainlink CRE workflow was deployed, we migrated to the standard public **Base Sepolia** testnet to ensure full compatibility with the Decentralized Oracle Network.
 ```bash
 forge build
-forge script script/Deploy.s.sol:DeployScript --rpc-url $TENDERLY_VIRTUAL_TESTNET_RPC --broadcast
+forge script script/Deploy.s.sol:DeployScript --rpc-url https://sepolia.base.org --broadcast
 ```

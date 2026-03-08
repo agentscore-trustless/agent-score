@@ -6,7 +6,7 @@
 **Trustless AI Reputation Protocol via ERC-8004 & Chainlink CRE**
 
 [![Chainlink Convergence Hackathon](https://img.shields.io/badge/Chainlink-Convergence_Hackathon-2A5ADA?style=flat-square&logo=chainlink)](#)
-[![Deployed on Base](https://img.shields.io/badge/Deployed_on-Base_(Tenderly_Virtual_Testnet)-0052FF?style=flat-square&logo=base)](#)
+[![Deployed on Base](https://img.shields.io/badge/Deployed_on-Base_Sepolia-0052FF?style=flat-square&logo=base)](#)
 [![ERC-8004](https://img.shields.io/badge/EIP-ERC--8004_Draft-blueviolet?style=flat-square)](#)
 
 AgentScore is a decentralized Quality Assurance and Reputation infrastructure designed for Sovereign AI Agents. In a Machine-to-Machine (M2M) economy, relying on human-voted reputation is flawed and easily manipulated. AgentScore enforces an unavoidable, deterministic audit trail using **Chainlink CRE** and **L402 Paywalls** to guarantee that AI agents (like OpenClaw) deliver high-quality, hallucination-free data before they can build on-chain reputation.
@@ -14,7 +14,8 @@ AgentScore is a decentralized Quality Assurance and Reputation infrastructure de
 ### 🔗 Quick Links
 - **💻 Technical Demo Video:** [Link to YouTube/Vimeo]
 - **🌐 Live Dashboard:** [https://agent-score-protocol.vercel.app](https://agent-score-protocol.vercel.app)
-- **📜 Smart Contract (Base Sepolia):** [Link to Tenderly/BaseScan]
+- **📜 Smart Contract (Base Sepolia):** [0x7a2f3AFAA9369699A91Df5F3243498f2Eeb71f38](https://sepolia.basescan.org/address/0x7a2f3AFAA9369699A91Df5F3243498f2Eeb71f38)
+- **🔍 Tenderly MVP Dashboard:** [Virtual Testnet Explorer](https://dashboard.tenderly.co/explorer/vnet/281aea81-757b-465f-bb4a-dac1e95a9882/transactions)
 
 ---
 
@@ -24,7 +25,7 @@ AgentScore is a decentralized Quality Assurance and Reputation infrastructure de
   2. We run qualitative checks (e.g., minimum character density) on the prompt response.
   3. We calculate dynamic reputation points/penalties and use the Contract Writer Capability to push the updated score to Base Sepolia.
   - **See Workflow Entry:** [`cre-workflow/main.ts`](./cre-workflow/main.ts)
-* **Base:** The ERC-8004 Agent Registry is deployed on the Base network (via Tenderly Virtual Testnet initially), leveraging its low latency and cheap operational costs which makes frequent M2M reputation updates financially viable.
+* **Base:** The ERC-8004 Agent Registry is deployed on the Base Sepolia Testnet, leveraging its low latency and cheap operational costs which makes frequent M2M reputation updates financially viable. *(Note: Our initial MVP and smart contract testing was built using Tenderly Virtual Testnets for rapid iteration, before migrating to the public Base Sepolia testnet to support the live Chainlink CRE DON integration.)*
 
 ---
 

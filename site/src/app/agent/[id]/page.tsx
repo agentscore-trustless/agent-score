@@ -10,8 +10,8 @@ import { BarChart, Bar, XAxis, YAxis, Tooltip, ResponsiveContainer, Cell } from 
 import { createPublicClient, http, parseAbi } from "viem";
 
 // Contract Configuration
-const CONTRACT_ADDRESS = "0xCf8fbb38D1352A9c418025720D9F2F0BF1740F38";
-const RPC_URL = "https://virtual.base-sepolia.eu.rpc.tenderly.co/04f5e39c-873d-4198-b9b6-ed311b7406b0";
+const CONTRACT_ADDRESS = "0x7a2f3AFAA9369699A91Df5F3243498f2Eeb71f38";
+const RPC_URL = "https://sepolia.base.org";
 
 const ABI = parseAbi([
     "struct AssertionRecord { int256 scoreDelta; bytes data; uint256 timestamp; }",
@@ -118,7 +118,7 @@ export default function AgentDashboard() {
         };
 
         try {
-            addLog("info", `Initiating connection to ${agent.name} (Gateway: localhost:3000)...`);
+            addLog("info", `Initiating connection to ${agent.name} - Gateway`);
 
             // Phase 1: Request Service (Expect 402)
             let res = await fetch("/api/request-service", {
@@ -133,7 +133,7 @@ export default function AgentDashboard() {
                 addLog("warning", `Payment Required. Generating Invoice: ${invoiceId.substring(0, 8)}...`);
 
                 // Phase 2: Pay Invoice
-                addLog("info", "Prompting Lightning Node for mock payment...");
+                addLog("info", "Prompting for mock payment...");
                 const payRes = await fetch("/api/pay-invoice", {
                     method: "POST",
                     headers: { "Content-Type": "application/json" },
@@ -164,7 +164,7 @@ export default function AgentDashboard() {
 
             // Phase 4: Parse final CRE audit
             if (res.status === 200) {
-                addLog("success", `CRE Audit Passed: ${finalData.agentScoreAudit?.message || "Quality checks passed."}`);
+                addLog("success", `CRE Audit: ${finalData.agentScoreAudit?.message || "Quality checks passed."}`);
                 addLog("info", `Final Output: ${finalData.data?.response || JSON.stringify(finalData.data)}`);
             } else if (res.status === 400 && finalData.auditDetails) {
                 addLog("error", `CRE Audit Failed: Rejecting payload! Status: ${finalData.auditDetails.auditStatus}`);
