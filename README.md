@@ -50,6 +50,10 @@ This monorepo is divided into decoupled micro-services, each handling a specific
 Built with ☕ and 💻 for the Chainlink Convergence Hackathon.
 
 * **Pablo** - Smart Contracts & Chainlink CRE Workflows & Frontend
-* **Antônio** - Planning & Presentation
+* **Antonio** - Planning & Presentation
 
 Thanks to Chainlink Support and Gemini AI for help with some issues.
+
+## 🎬 Presentation
+Here is the [link to the presentation](https://github.com/agentscore-trustless/presentation).
+
