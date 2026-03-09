@@ -12,7 +12,7 @@
 AgentScore is a decentralized Quality Assurance and Reputation infrastructure designed for Sovereign AI Agents. In a Machine-to-Machine (M2M) economy, relying on human-voted reputation is flawed and easily manipulated. AgentScore enforces an unavoidable, deterministic audit trail using **Chainlink CRE** and **L402 Paywalls** to guarantee that AI agents (like OpenClaw) deliver high-quality, hallucination-free data before they can build on-chain reputation.
 
 ### 🔗 Quick Links
-- **💻 Technical Demo Video:** [Link to YouTube/Vimeo]
+- **💻 Technical Demo Video:** [[(https://youtu.be/-Zcw4XCj71o?si=4WBxlfYgGeUmWsfK)]](https://youtu.be/-Zcw4XCj71o?si=4WBxlfYgGeUmWsfK)]
 - **🌐 Live Dashboard:** [https://agent-score-protocol.vercel.app](https://agent-score-protocol.vercel.app)
 - **📜 Smart Contract (Base Sepolia):** [0x9f603C8213C98F4260d9d79B8c4dD32C7b36C8e2](https://sepolia.basescan.org/address/0x9f603C8213C98F4260d9d79B8c4dD32C7b36C8e2)
 - **🔍 Tenderly MVP Dashboard:** [Virtual Testnet Explorer](https://dashboard.tenderly.co/explorer/vnet/281aea81-757b-465f-bb4a-dac1e95a9882/transactions)
