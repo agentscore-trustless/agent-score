@@ -9,7 +9,7 @@
 [![Deployed on Base](https://img.shields.io/badge/Deployed_on-Base_Sepolia-0052FF?style=flat-square&logo=base)](#)
 [![ERC-8004](https://img.shields.io/badge/EIP-ERC--8004_Draft-blueviolet?style=flat-square)](#)
 
-AgentScore is a decentralized Quality Assurance and Reputation infrastructure designed for Sovereign AI Agents. In a Machine-to-Machine (M2M) economy, relying on human-voted reputation is flawed and easily manipulated. AgentScore enforces an unavoidable, deterministic audit trail using **Chainlink CRE** and **L402 Paywalls** to guarantee that AI agents (like OpenClaw) deliver high-quality, hallucination-free data before they can build on-chain reputation.
+AgentScore is a decentralized Quality Assurance and Reputation infrastructure designed for Sovereign AI Agents. In a Machine-to-Machine (M2M) economy, relying on human-voted reputation is flawed and easily manipulated. AgentScore enforces an unavoidable, deterministic audit trail using **[Chainlink CRE](https://chain.link/chainlink-runtime-environment)** and **[HTTP L402 Paywalls](https://www.x402.org)** to guarantee that AI agents (like OpenClaw) deliver high-quality, hallucination-free data before they can build on-chain reputation.
 
 ### 🔗 Quick Links
 - **💻 Technical Demo Video:** [https://youtu.be/-Zcw4XCj71o?si=4WBxlfYgGeUmWsfK](https://youtu.be/-Zcw4XCj71o?si=4WBxlfYgGeUmWsfK)
@@ -22,7 +22,7 @@ AgentScore is a decentralized Quality Assurance and Reputation infrastructure de
 ## 🏆 Chainlink Convergence Hackathon Tracks
 * **Chainlink CRE / Workflows:** We heavily utilized Chainlink CRE as a decentralized, deterministic auditor to evaluate the AI Agent's output payloads. In our `cre-workflow`, we parse the Agent's JSON response to run strict Service Level Agreements (SLAs):
   - **See Workflow Entry:** [`cre-workflow/main.ts`](./cre-workflow/main.ts)
-* **Base:** The ERC-8004 Agent Registry is deployed on the Base Sepolia Testnet, leveraging its low latency and cheap operational costs which makes frequent M2M reputation updates financially viable. *(Note: Our initial MVP and smart contract testing was built using Tenderly Virtual Testnets for rapid iteration, before migrating to the public Base Sepolia testnet to support the live Chainlink CRE DON integration.)*
+* **Base:** The [ERC-8004 Agent Registry](https://github.com/erc-8004/erc-8004-contracts) is deployed on the [Base Sepolia Testnet](https://docs.base.org/get-started/connect-to-base), leveraging its low latency and cheap operational costs which makes frequent M2M reputation updates financially viable. *(Note: Our initial MVP and smart contract testing was built using [Tenderly Virtual Testnets](https://docs.tenderly.co/virtual-environments/overview) for rapid iteration, before migrating to the public Base Sepolia testnet to support the live Chainlink CRE (Chainlink Runtime Environment) DON (Decentralized Oracle Network) integration)*
 
 ---
 
@@ -49,8 +49,8 @@ This monorepo is divided into decoupled micro-services, each handling a specific
 
 Built with ☕ and 💻 for the Chainlink Convergence Hackathon.
 
-* **Pablo** - Smart Contracts & Chainlink CRE Workflows & Frontend
-* **Antonio** - Planning & Presentation
+* **[Pablo](https://github.com/pablodevbr)** - Smart Contracts & Chainlink CRE Workflows & Frontend
+* **[Antonio](https://github.com/aquental)** - Planning & Presentation
 
 Thanks to Chainlink Support and Gemini AI for help with some issues.
 
